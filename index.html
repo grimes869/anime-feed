@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MyAnimeList News</title>
+  <title>MAL News</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&display=swap" rel="stylesheet" />
@@ -18,12 +18,15 @@
       --text-meta: #9b9b93;
       --accent: #2b5ce6;
       --accent-soft: #eef2fd;
-      --tag-bg: #f0f0ec;
-      --tag-text: #6b6b65;
       --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
       --shadow-hover: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
       --radius: 12px;
       --img-bg: #e8e8e4;
+      --dot: #d0d0cc;
+      --dot-active: #1a1a18;
+      --btn-bg: rgba(255,255,255,0.9);
+      --btn-border: rgba(0,0,0,0.08);
+      --btn-shadow: 0 2px 8px rgba(0,0,0,0.12);
     }
 
     @media (prefers-color-scheme: dark) {
@@ -37,19 +40,18 @@
         --text-meta: #6b6b65;
         --accent: #6b8ef5;
         --accent-soft: #1e2540;
-        --tag-bg: #2a2a28;
-        --tag-text: #9b9b93;
         --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
         --shadow-hover: 0 2px 8px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
         --img-bg: #2a2a28;
+        --dot: #3a3a38;
+        --dot-active: #f0f0ec;
+        --btn-bg: rgba(34,34,32,0.92);
+        --btn-border: rgba(255,255,255,0.08);
+        --btn-shadow: 0 2px 8px rgba(0,0,0,0.4);
       }
     }
 
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
       background: transparent;
@@ -58,55 +60,34 @@
       font-size: 14px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
+      overflow: hidden;
     }
 
-    .feed-wrapper {
-      background: transparent;
-      padding: 4px 2px 12px;
+    /* ── Carousel wrapper ── */
+    .carousel {
+      position: relative;
+      width: 100%;
+      padding-bottom: 36px; /* room for dots */
     }
 
-    .feed-header {
+    /* Overflow clip with peek on sides */
+    .carousel-track-wrap {
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .carousel-track {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0 2px 14px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 14px;
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      will-change: transform;
+      align-items: stretch;
     }
 
-    .feed-header-logo {
-      width: 28px;
-      height: 28px;
-      border-radius: 6px;
-      object-fit: contain;
-      background: var(--img-bg);
-    }
-
-    .feed-header-title {
-      font-family: 'Fraunces', serif;
-      font-size: 16px;
-      font-weight: 300;
-      color: var(--text-primary);
-      letter-spacing: -0.2px;
-    }
-
-    .feed-header-title span {
-      color: var(--text-meta);
-      font-style: italic;
-    }
-
-    .feed-header-count {
-      margin-left: auto;
-      font-size: 11px;
-      color: var(--text-meta);
-      font-weight: 400;
-      letter-spacing: 0.3px;
-    }
-
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 12px;
+    /* ── Cards ── */
+    .carousel-slide {
+      flex: 0 0 calc(33.333% - 8px);
+      margin-right: 12px;
+      min-width: 0;
     }
 
     .card {
@@ -121,6 +102,7 @@
       color: inherit;
       display: flex;
       flex-direction: column;
+      height: 100%;
     }
 
     .card:hover {
@@ -134,7 +116,6 @@
       aspect-ratio: 16/9;
       overflow: hidden;
       background: var(--img-bg);
-      position: relative;
       flex-shrink: 0;
     }
 
@@ -156,20 +137,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: var(--img-bg);
     }
 
     .card-image-placeholder svg {
-      opacity: 0.25;
-      width: 32px;
-      height: 32px;
+      opacity: 0.2;
+      width: 28px;
+      height: 28px;
     }
 
     .card-body {
       padding: 14px 16px 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 7px;
       flex: 1;
     }
 
@@ -193,12 +173,11 @@
     .card-date {
       font-size: 11px;
       color: var(--text-meta);
-      font-weight: 400;
     }
 
     .card-title {
       font-family: 'Fraunces', serif;
-      font-size: 15px;
+      font-size: 14px;
       font-weight: 300;
       line-height: 1.4;
       color: var(--text-primary);
@@ -214,7 +193,7 @@
       color: var(--text-secondary);
       line-height: 1.55;
       display: -webkit-box;
-      -webkit-line-clamp: 3;
+      -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
       font-weight: 300;
@@ -222,7 +201,7 @@
 
     .card-footer {
       margin-top: auto;
-      padding-top: 10px;
+      padding-top: 8px;
       display: flex;
       align-items: center;
       justify-content: flex-end;
@@ -232,7 +211,6 @@
       font-size: 11px;
       font-weight: 500;
       color: var(--accent);
-      letter-spacing: 0.2px;
       display: flex;
       align-items: center;
       gap: 3px;
@@ -240,63 +218,82 @@
       transition: opacity 0.2s ease;
     }
 
-    .card:hover .card-read-more {
-      opacity: 1;
-    }
+    .card:hover .card-read-more { opacity: 1; }
 
-    .card-read-more svg {
-      width: 11px;
-      height: 11px;
-    }
+    .card-read-more svg { width: 11px; height: 11px; }
 
-    /* Loading state */
-    .loading {
+    /* ── Nav buttons ── */
+    .carousel-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(calc(-50% - 18px));
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--btn-bg);
+      border: 1px solid var(--btn-border);
+      box-shadow: var(--btn-shadow);
+      cursor: pointer;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      padding: 48px 24px;
-      color: var(--text-meta);
+      z-index: 10;
+      transition: opacity 0.2s, transform 0.2s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
 
-    .loading-dots {
+    .carousel-btn:hover { transform: translateY(calc(-50% - 18px)) scale(1.08); }
+    .carousel-btn:disabled { opacity: 0.25; cursor: default; }
+    .carousel-btn:disabled:hover { transform: translateY(calc(-50% - 18px)) scale(1); }
+
+    .carousel-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--text-primary);
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .carousel-btn-prev { left: -14px; }
+    .carousel-btn-next { right: -14px; }
+
+    /* ── Dots ── */
+    .carousel-dots {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
       display: flex;
+      justify-content: center;
+      align-items: center;
       gap: 6px;
+      padding: 8px 0;
     }
 
-    .loading-dots span {
+    .dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
-      background: var(--text-meta);
-      animation: pulse 1.2s ease-in-out infinite;
+      background: var(--dot);
+      cursor: pointer;
+      transition: background 0.25s, transform 0.25s, width 0.25s;
+      border: none;
+      padding: 0;
     }
 
-    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
-    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-    @keyframes pulse {
-      0%, 80%, 100% { opacity: 0.2; transform: scale(0.85); }
-      40% { opacity: 1; transform: scale(1); }
+    .dot.active {
+      background: var(--dot-active);
+      width: 18px;
+      border-radius: 3px;
     }
 
-    .loading-text {
-      font-size: 12px;
-      font-weight: 400;
-      letter-spacing: 0.3px;
-    }
-
-    /* Error state */
-    .error-state {
-      text-align: center;
-      padding: 48px 24px;
-      color: var(--text-meta);
-      font-size: 13px;
-    }
-
-    /* Skeleton cards */
-    .skeleton-card {
+    /* ── Skeleton ── */
+    .skeleton-slide {
+      flex: 0 0 calc(33.333% - 8px);
+      margin-right: 12px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -319,7 +316,7 @@
     }
 
     .skeleton-line {
-      height: 12px;
+      height: 11px;
       border-radius: 4px;
       background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
       background-size: 200% 100%;
@@ -331,52 +328,45 @@
       100% { background-position: -200% 0; }
     }
 
-    /* Staggered card entrance */
-    .card {
-      opacity: 0;
-      transform: translateY(8px);
-      animation: cardIn 0.4s ease forwards;
+    .error-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-meta);
+      font-size: 13px;
     }
 
+    /* Card entrance animation */
     @keyframes cardIn {
-      to { opacity: 1; transform: translateY(0); }
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
   </style>
 </head>
 <body>
-  <div class="feed-wrapper">
-    <div class="feed-header">
-      <img
-        class="feed-header-logo"
-        src="https://cdn.myanimelist.net/images/favicon.ico"
-        alt="MAL"
-        onerror="this.style.display='none'"
-      />
-      <div class="feed-header-title">MyAnimeList <span>News</span></div>
-      <div class="feed-header-count" id="article-count"></div>
-    </div>
-    <div id="feed-container">
-      <div class="cards-grid" id="skeleton-grid">
-        ${[1,2,3,4,5,6].map(() => `
-          <div class="skeleton-card">
-            <div class="skeleton-img"></div>
-            <div class="skeleton-body">
-              <div class="skeleton-line" style="width:40%"></div>
-              <div class="skeleton-line" style="width:90%"></div>
-              <div class="skeleton-line" style="width:75%"></div>
-              <div class="skeleton-line" style="width:60%; margin-top:4px"></div>
-            </div>
-          </div>
-        `).join('')}
+
+  <div class="carousel" id="carousel">
+    <button class="carousel-btn carousel-btn-prev" id="btn-prev" aria-label="Previous">
+      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div class="carousel-track-wrap">
+      <div class="carousel-track" id="carousel-track">
+        <!-- skeleton -->
+        <div class="skeleton-slide"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:85%"></div><div class="skeleton-line" style="width:65%"></div></div></div>
+        <div class="skeleton-slide"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:85%"></div><div class="skeleton-line" style="width:65%"></div></div></div>
+        <div class="skeleton-slide"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:85%"></div><div class="skeleton-line" style="width:65%"></div></div></div>
       </div>
     </div>
+    <button class="carousel-btn carousel-btn-next" id="btn-next" aria-label="Next">
+      <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
+    </button>
+    <div class="carousel-dots" id="carousel-dots"></div>
   </div>
 
   <script>
-    const FEED_URL = 'https://myanimelist.net/rss/news.xml';
+    const FEED_URL  = 'https://myanimelist.net/rss/news.xml';
     const MAX_ITEMS = 12;
+    const PER_PAGE  = 3; // cards visible at once
 
-    // Fallback chain — tries each proxy in order until one works
     const PROXIES = [
       async (url) => {
         const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`);
@@ -408,112 +398,150 @@
       throw new Error('All proxies failed');
     }
 
-    function formatDate(dateStr) {
-      if (!dateStr) return '';
-      const d = new Date(dateStr);
+    function formatDate(str) {
+      if (!str) return '';
+      const d = new Date(str);
       if (isNaN(d)) return '';
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     function extractImage(item) {
-      // MAL uses <media:thumbnail> with Yahoo MRSS namespace
       const MRSS = 'http://search.yahoo.com/mrss/';
       const thumb = item.getElementsByTagNameNS(MRSS, 'thumbnail')[0];
       if (thumb) return thumb.getAttribute('url') || thumb.textContent.trim();
-
-      // Try media:content with namespace
       const content = item.getElementsByTagNameNS(MRSS, 'content')[0];
-      if (content && content.getAttribute('url')) return content.getAttribute('url');
-
-      // Try enclosure
+      if (content?.getAttribute('url')) return content.getAttribute('url');
       const enclosure = item.querySelector('enclosure');
-      if (enclosure && enclosure.getAttribute('url')) return enclosure.getAttribute('url');
-
-      // Try image inside description CDATA as last resort
+      if (enclosure?.getAttribute('url')) return enclosure.getAttribute('url');
       const descText = item.querySelector('description')?.textContent || '';
       const frag = document.createElement('div');
       frag.innerHTML = descText;
       const img = frag.querySelector('img');
-      if (img && img.getAttribute('src')) return img.getAttribute('src');
-
+      if (img?.getAttribute('src')) return img.getAttribute('src');
       return null;
     }
 
     function stripHtml(html) {
-      const tmp = document.createElement('div');
-      tmp.innerHTML = html;
-      return tmp.textContent || tmp.innerText || '';
+      const d = document.createElement('div');
+      d.innerHTML = html;
+      return d.textContent || d.innerText || '';
     }
 
-    function buildCard(item, index) {
-      const title = item.querySelector('title')?.textContent?.trim() || 'Untitled';
-      const link = item.querySelector('link')?.textContent?.trim() || '#';
+    function buildSlide(item, idx) {
+      const title   = item.querySelector('title')?.textContent?.trim() || 'Untitled';
+      const link    = item.querySelector('link')?.textContent?.trim() || '#';
       const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
       const descRaw = item.querySelector('description')?.textContent || '';
-      const desc = stripHtml(descRaw).replace(/\s+/g, ' ').trim();
-      const imageUrl = extractImage(item);
-      const date = formatDate(pubDate);
+      const desc    = stripHtml(descRaw).replace(/\s+/g, ' ').trim();
+      const imgUrl  = extractImage(item);
+      const date    = formatDate(pubDate);
 
-      const imageHtml = imageUrl
-        ? `<img src="${imageUrl}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'></rect><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'></circle><path d=\\'M21 15l-5-5L5 21\\'></path></svg></div>'" />`
-        : `<div class="card-image-placeholder">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-              <circle cx="8.5" cy="8.5" r="1.5"></circle>
-              <path d="M21 15l-5-5L5 21"></path>
-            </svg>
-          </div>`;
+      const imgHtml = imgUrl
+        ? `<img src="${imgUrl}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'></rect><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'></circle><path d=\\'M21 15l-5-5L5 21\\'></path></svg></div>'" />`
+        : `<div class="card-image-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg></div>`;
 
       return `
-        <a class="card" href="${link}" target="_blank" rel="noopener noreferrer" style="animation-delay: ${index * 0.05}s">
-          <div class="card-image-wrap">${imageHtml}</div>
-          <div class="card-body">
-            <div class="card-meta">
-              <span class="card-source">MAL</span>
-              ${date ? `<span class="card-date">${date}</span>` : ''}
+        <div class="carousel-slide">
+          <a class="card" href="${link}" target="_blank" rel="noopener noreferrer"
+             style="animation: cardIn 0.4s ease ${idx * 0.06}s both">
+            <div class="card-image-wrap">${imgHtml}</div>
+            <div class="card-body">
+              <div class="card-meta">
+                <span class="card-source">MAL</span>
+                ${date ? `<span class="card-date">${date}</span>` : ''}
+              </div>
+              <div class="card-title">${title}</div>
+              ${desc ? `<div class="card-desc">${desc.slice(0, 180)}</div>` : ''}
+              <div class="card-footer">
+                <span class="card-read-more">
+                  Read more
+                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M2 6h8M6 2l4 4-4 4"/>
+                  </svg>
+                </span>
+              </div>
             </div>
-            <div class="card-title">${title}</div>
-            ${desc ? `<div class="card-desc">${desc.slice(0, 200)}</div>` : ''}
-            <div class="card-footer">
-              <span class="card-read-more">
-                Read more
-                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
-                  <path d="M2 6h8M6 2l4 4-4 4"/>
-                </svg>
-              </span>
-            </div>
-          </div>
-        </a>
-      `;
+          </a>
+        </div>`;
     }
 
-    async function loadFeed() {
-      const container = document.getElementById('feed-container');
-      const countEl = document.getElementById('article-count');
+    // ── Carousel state ──
+    let currentPage = 0;
+    let totalPages  = 0;
+    let autoTimer   = null;
 
+    const track    = document.getElementById('carousel-track');
+    const dotsWrap = document.getElementById('carousel-dots');
+    const btnPrev  = document.getElementById('btn-prev');
+    const btnNext  = document.getElementById('btn-next');
+
+    function goTo(page) {
+      currentPage = Math.max(0, Math.min(page, totalPages - 1));
+      // Slide width = (100% / PER_PAGE) * PER_PAGE + gaps
+      const slideWidth = track.parentElement.offsetWidth / PER_PAGE;
+      const offset = currentPage * PER_PAGE * slideWidth + currentPage * 12;
+      track.style.transform = `translateX(-${offset}px)`;
+
+      // Update dots
+      dotsWrap.querySelectorAll('.dot').forEach((d, i) => {
+        d.classList.toggle('active', i === currentPage);
+      });
+
+      btnPrev.disabled = currentPage === 0;
+      btnNext.disabled = currentPage === totalPages - 1;
+    }
+
+    function startAuto() {
+      clearInterval(autoTimer);
+      autoTimer = setInterval(() => {
+        goTo(currentPage < totalPages - 1 ? currentPage + 1 : 0);
+      }, 5000);
+    }
+
+    function resetAuto() {
+      startAuto();
+    }
+
+    btnPrev.addEventListener('click', () => { goTo(currentPage - 1); resetAuto(); });
+    btnNext.addEventListener('click', () => { goTo(currentPage + 1); resetAuto(); });
+
+    // Pause on hover
+    document.getElementById('carousel').addEventListener('mouseenter', () => clearInterval(autoTimer));
+    document.getElementById('carousel').addEventListener('mouseleave', startAuto);
+
+    async function loadFeed() {
       try {
         const text = await fetchWithFallback(FEED_URL);
         const parser = new DOMParser();
-        const xml = parser.parseFromString(text, 'text/xml');
+        const xml   = parser.parseFromString(text, 'text/xml');
         const items = Array.from(xml.querySelectorAll('item')).slice(0, MAX_ITEMS);
+        if (!items.length) throw new Error('No items');
 
-        if (!items.length) throw new Error('No items found');
+        totalPages = Math.ceil(items.length / PER_PAGE);
 
-        countEl.textContent = `${items.length} articles`;
+        // Build all slides
+        track.innerHTML = items.map((item, i) => buildSlide(item, i)).join('');
 
-        container.innerHTML = `
-          <div class="cards-grid">
-            ${items.map((item, i) => buildCard(item, i)).join('')}
-          </div>
-        `;
+        // Build dots
+        dotsWrap.innerHTML = Array.from({ length: totalPages }, (_, i) =>
+          `<button class="dot${i === 0 ? ' active' : ''}" aria-label="Page ${i+1}"></button>`
+        ).join('');
+
+        dotsWrap.querySelectorAll('.dot').forEach((dot, i) => {
+          dot.addEventListener('click', () => { goTo(i); resetAuto(); });
+        });
+
+        goTo(0);
+        startAuto();
+
       } catch (err) {
         console.error(err);
-        container.innerHTML = `
+        track.parentElement.parentElement.innerHTML = `
           <div class="error-state">
-            Unable to load feed. <br/>
-            <a href="https://myanimelist.net/news" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none;">Visit MAL News →</a>
-          </div>
-        `;
+            Unable to load feed.<br/>
+            <a href="https://myanimelist.net/news" target="_blank" rel="noopener"
+               style="color:var(--accent);text-decoration:none;">Visit MAL News →</a>
+          </div>`;
       }
     }
 
