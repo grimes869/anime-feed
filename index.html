@@ -530,6 +530,13 @@
     }
 
     loadFeed();
+
+    // Reflow carousel position whenever the iframe is resized by Notion
+    // CSS vw units recalculate automatically; we just need to re-fire goTo
+    // so the JS-driven translateX stays in sync
+    window.addEventListener('resize', () => {
+      if (totalPages > 0) goTo(currentPage);
+    });
   </script>
 </body>
 </html>
