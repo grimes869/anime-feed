@@ -54,7 +54,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
-      background: transparent;
+      background: transparent !important;
       font-family: 'Outfit', sans-serif;
       color: var(--text-primary);
       font-size: 14px;
@@ -67,7 +67,7 @@
     .carousel {
       position: relative;
       width: 100%;
-      padding-bottom: 36px; /* room for dots */
+      padding: 10px 16px 36px;
     }
 
     /* Overflow clip with peek on sides */
@@ -85,9 +85,11 @@
 
     /* ── Cards ── */
     .carousel-slide {
-      flex: 0 0 calc(33.333% - 8px);
+      flex: 0 0 var(--slide-width, calc(33.333% - 8px));
+      width: var(--slide-width, calc(33.333% - 8px));
       margin-right: 12px;
       min-width: 0;
+      max-width: none;
     }
 
     .card {
@@ -475,11 +477,21 @@
     const btnPrev  = document.getElementById('btn-prev');
     const btnNext  = document.getElementById('btn-next');
 
+    function getSlideWidth() {
+      // Always exactly 1/3 of the track wrapper, accounting for gaps between 3 cards
+      const wrapWidth = track.parentElement.offsetWidth;
+      const totalGap  = 12 * (PER_PAGE - 1); // 2 gaps between 3 cards
+      const sw = (wrapWidth - totalGap) / PER_PAGE;
+      // Write back as CSS variable so CSS flex-basis matches JS math
+      document.documentElement.style.setProperty('--slide-width', sw + 'px');
+      return sw;
+    }
+
     function goTo(page) {
       currentPage = Math.max(0, Math.min(page, totalPages - 1));
-      // Slide width = (100% / PER_PAGE) * PER_PAGE + gaps
-      const slideWidth = track.parentElement.offsetWidth / PER_PAGE;
-      const offset = currentPage * PER_PAGE * slideWidth + currentPage * 12;
+      const slideWidth = getSlideWidth();
+      // Each page advances by PER_PAGE slides + their gaps
+      const offset = currentPage * (PER_PAGE * (slideWidth + 12));
       track.style.transform = `translateX(-${offset}px)`;
 
       // Update dots
@@ -546,6 +558,12 @@
     }
 
     loadFeed();
+
+    // Recalculate on resize so 3-up layout stays locked
+    const resizeObserver = new ResizeObserver(() => {
+      goTo(currentPage);
+    });
+    resizeObserver.observe(track.parentElement);
   </script>
 </body>
 </html>
