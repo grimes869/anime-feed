@@ -26,8 +26,8 @@
       --btn-bg: rgba(255,255,255,0.92);
       --btn-border: rgba(0,0,0,0.08);
       --btn-shadow: 0 2px 8px rgba(0,0,0,0.12);
-      --gap: 12px;
-      --pad: 14px;
+      --gap: 8px;
+      --pad: 10px;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -57,7 +57,7 @@
       background: #8c8c8c;
       font-family: 'Outfit', sans-serif;
       color: var(--text-primary);
-      font-size: 14px;
+      font-size: 12px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
       overflow: hidden;
@@ -65,6 +65,30 @@
 
     body {
       padding: var(--pad);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .carousel {
+      flex: 1;
+      min-height: 0;
+    }
+    
+    .carousel-viewport {
+      height: 100%;
+    }
+    
+    .carousel-track {
+      height: 100%;
+    }
+    
+    .carousel-page {
+      height: 100%;
+    }
+    
+    .card {
+      height: 100% !important;
     }
 
     /* ── Carousel ── */
@@ -76,7 +100,6 @@
     .carousel-viewport {
       overflow: hidden;
       width: 100%;
-      /* Clip the overlay controls to the card area */
       border-radius: var(--radius);
     }
 
@@ -116,10 +139,10 @@
 
     .card-image-wrap {
       width: 100%;
-      aspect-ratio: 16/9;
+      flex: 1 1 0;
+      min-height: 0;
       overflow: hidden;
       background: var(--img-bg);
-      flex-shrink: 0;
     }
 
     .card-image-wrap img {
@@ -143,11 +166,11 @@
     .card-image-placeholder svg { opacity: 0.2; width: 28px; height: 28px; }
 
     .card-body {
-      padding: 10px 14px 12px;
+      padding: 8px 10px 10px;
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      flex: 1;
+      gap: 4px;
+      flex: 0 0 auto;
     }
 
     .card-meta { display: flex; align-items: center; gap: 6px; }
@@ -167,7 +190,7 @@
 
     .card-title {
       font-family: 'Fraunces', serif;
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 300;
       line-height: 1.4;
       color: var(--text-primary);
@@ -297,7 +320,7 @@
     }
 
     .skeleton-img {
-      width: 100%; aspect-ratio: 16/9;
+      width: 100%; height: 80px;
       background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
