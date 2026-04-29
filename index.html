@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyAnimeList News</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f7f7f5;
+      --surface-hover: #f0f0ec;
+      --border: #e8e8e4;
+      --text-primary: #1a1a18;
+      --text-secondary: #6b6b65;
+      --text-meta: #9b9b93;
+      --accent: #2b5ce6;
+      --accent-soft: #eef2fd;
+      --tag-bg: #f0f0ec;
+      --tag-text: #6b6b65;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      --shadow-hover: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
+      --radius: 12px;
+      --img-bg: #e8e8e4;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #191919;
+        --surface: #222220;
+        --surface-hover: #2a2a28;
+        --border: #2e2e2c;
+        --text-primary: #f0f0ec;
+        --text-secondary: #9b9b93;
+        --text-meta: #6b6b65;
+        --accent: #6b8ef5;
+        --accent-soft: #1e2540;
+        --tag-bg: #2a2a28;
+        --tag-text: #9b9b93;
+        --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+        --shadow-hover: 0 2px 8px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+        --img-bg: #2a2a28;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      background: transparent;
+      font-family: 'Outfit', sans-serif;
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .feed-wrapper {
+      background: transparent;
+      padding: 4px 2px 12px;
+    }
+
+    .feed-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 2px 14px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+
+    .feed-header-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      object-fit: contain;
+      background: var(--img-bg);
+    }
+
+    .feed-header-title {
+      font-family: 'Fraunces', serif;
+      font-size: 16px;
+      font-weight: 300;
+      color: var(--text-primary);
+      letter-spacing: -0.2px;
+    }
+
+    .feed-header-title span {
+      color: var(--text-meta);
+      font-style: italic;
+    }
+
+    .feed-header-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text-meta);
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+      background: var(--surface-hover);
+    }
+
+    .card-image-wrap {
+      width: 100%;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      background: var(--img-bg);
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .card-image-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.35s ease;
+      display: block;
+    }
+
+    .card:hover .card-image-wrap img {
+      transform: scale(1.04);
+    }
+
+    .card-image-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--img-bg);
+    }
+
+    .card-image-placeholder svg {
+      opacity: 0.25;
+      width: 32px;
+      height: 32px;
+    }
+
+    .card-body {
+      padding: 14px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-source {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-soft);
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .card-date {
+      font-size: 11px;
+      color: var(--text-meta);
+      font-weight: 400;
+    }
+
+    .card-title {
+      font-family: 'Fraunces', serif;
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.4;
+      color: var(--text-primary);
+      letter-spacing: -0.1px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.55;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-weight: 300;
+    }
+
+    .card-footer {
+      margin-top: auto;
+      padding-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .card-read-more {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .card:hover .card-read-more {
+      opacity: 1;
+    }
+
+    .card-read-more svg {
+      width: 11px;
+      height: 11px;
+    }
+
+    /* Loading state */
+    .loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 48px 24px;
+      color: var(--text-meta);
+    }
+
+    .loading-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .loading-dots span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--text-meta);
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes pulse {
+      0%, 80%, 100% { opacity: 0.2; transform: scale(0.85); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    .loading-text {
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.3px;
+    }
+
+    /* Error state */
+    .error-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-meta);
+      font-size: 13px;
+    }
+
+    /* Skeleton cards */
+    .skeleton-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .skeleton-img {
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    .skeleton-body {
+      padding: 14px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .skeleton-line {
+      height: 12px;
+      border-radius: 4px;
+      background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Staggered card entrance */
+    .card {
+      opacity: 0;
+      transform: translateY(8px);
+      animation: cardIn 0.4s ease forwards;
+    }
+
+    @keyframes cardIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="feed-wrapper">
+    <div class="feed-header">
+      <img
+        class="feed-header-logo"
+        src="https://cdn.myanimelist.net/images/favicon.ico"
+        alt="MAL"
+        onerror="this.style.display='none'"
+      />
+      <div class="feed-header-title">MyAnimeList <span>News</span></div>
+      <div class="feed-header-count" id="article-count"></div>
+    </div>
+    <div id="feed-container">
+      <div class="cards-grid" id="skeleton-grid">
+        ${[1,2,3,4,5,6].map(() => `
+          <div class="skeleton-card">
+            <div class="skeleton-img"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line" style="width:40%"></div>
+              <div class="skeleton-line" style="width:90%"></div>
+              <div class="skeleton-line" style="width:75%"></div>
+              <div class="skeleton-line" style="width:60%; margin-top:4px"></div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const CORS_PROXY = 'https://api.allorigins.win/get?url=';
+    const FEED_URL = 'https://myanimelist.net/rss/news.xml';
+    const MAX_ITEMS = 12;
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      if (isNaN(d)) return '';
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function extractImage(item) {
+      // Try media:content
+      const mediaContent = item.querySelector('content');
+      if (mediaContent && mediaContent.getAttribute('url')) {
+        return mediaContent.getAttribute('url');
+      }
+      // Try enclosure
+      const enclosure = item.querySelector('enclosure');
+      if (enclosure && enclosure.getAttribute('url')) {
+        return enclosure.getAttribute('url');
+      }
+      // Try image inside description HTML
+      const desc = item.querySelector('description')?.textContent || '';
+      const imgMatch = desc.match(/<img[^>]+src=["']([^"']+)["']/i);
+      if (imgMatch) return imgMatch[1];
+      // Try media:thumbnail
+      const thumb = item.querySelector('thumbnail');
+      if (thumb && thumb.getAttribute('url')) return thumb.getAttribute('url');
+      return null;
+    }
+
+    function stripHtml(html) {
+      const tmp = document.createElement('div');
+      tmp.innerHTML = html;
+      return tmp.textContent || tmp.innerText || '';
+    }
+
+    function buildCard(item, index) {
+      const title = item.querySelector('title')?.textContent?.trim() || 'Untitled';
+      const link = item.querySelector('link')?.textContent?.trim() || '#';
+      const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
+      const descRaw = item.querySelector('description')?.textContent || '';
+      const desc = stripHtml(descRaw).replace(/\s+/g, ' ').trim();
+      const imageUrl = extractImage(item);
+      const date = formatDate(pubDate);
+
+      const imageHtml = imageUrl
+        ? `<img src="${imageUrl}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'></rect><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'></circle><path d=\\'M21 15l-5-5L5 21\\'></path></svg></div>'" />`
+        : `<div class="card-image-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+              <circle cx="8.5" cy="8.5" r="1.5"></circle>
+              <path d="M21 15l-5-5L5 21"></path>
+            </svg>
+          </div>`;
+
+      return `
+        <a class="card" href="${link}" target="_blank" rel="noopener noreferrer" style="animation-delay: ${index * 0.05}s">
+          <div class="card-image-wrap">${imageHtml}</div>
+          <div class="card-body">
+            <div class="card-meta">
+              <span class="card-source">MAL</span>
+              ${date ? `<span class="card-date">${date}</span>` : ''}
+            </div>
+            <div class="card-title">${title}</div>
+            ${desc ? `<div class="card-desc">${desc.slice(0, 200)}</div>` : ''}
+            <div class="card-footer">
+              <span class="card-read-more">
+                Read more
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M2 6h8M6 2l4 4-4 4"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+        </a>
+      `;
+    }
+
+    async function loadFeed() {
+      const container = document.getElementById('feed-container');
+      const countEl = document.getElementById('article-count');
+
+      try {
+        const res = await fetch(`${CORS_PROXY}${encodeURIComponent(FEED_URL)}`);
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(data.contents, 'text/xml');
+        const items = Array.from(xml.querySelectorAll('item')).slice(0, MAX_ITEMS);
+
+        if (!items.length) throw new Error('No items found');
+
+        countEl.textContent = `${items.length} articles`;
+
+        container.innerHTML = `
+          <div class="cards-grid">
+            ${items.map((item, i) => buildCard(item, i)).join('')}
+          </div>
+        `;
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `
+          <div class="error-state">
+            Unable to load feed. <br/>
+            <a href="https://myanimelist.net/news" target="_blank" rel="noopener" style="color: var(--accent); text-decoration: none;">Visit MAL News →</a>
+          </div>
+        `;
+      }
+    }
+
+    loadFeed();
+  </script>
+</body>
+</html>
