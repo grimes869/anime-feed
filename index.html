@@ -426,13 +426,20 @@
       if (enclosure && enclosure.getAttribute('url')) {
         return enclosure.getAttribute('url');
       }
-      // Try image inside description HTML
-      const desc = item.querySelector('description')?.textContent || '';
-      const imgMatch = desc.match(/<img[^>]+src=["']([^"']+)["']/i);
-      if (imgMatch) return imgMatch[1];
       // Try media:thumbnail
       const thumb = item.querySelector('thumbnail');
       if (thumb && thumb.getAttribute('url')) return thumb.getAttribute('url');
+      // MAL wraps description in CDATA containing raw HTML
+      // textContent gives us the raw HTML string from inside CDATA
+      const descText = item.querySelector('description')?.textContent || '';
+      // Parse it as HTML so we can query the img tag properly
+      const frag = document.createElement('div');
+      frag.innerHTML = descText;
+      const img = frag.querySelector('img');
+      if (img && img.getAttribute('src')) return img.getAttribute('src');
+      // Fallback regex on raw string
+      const match = descText.match(/src=["']([^"']+\.(?:jpg|jpeg|png|gif|webp)[^"']*)/i);
+      if (match) return match[1];
       return null;
     }
 
