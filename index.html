@@ -373,9 +373,40 @@
   </div>
 
   <script>
-    const CORS_PROXY = 'https://api.allorigins.win/get?url=';
     const FEED_URL = 'https://myanimelist.net/rss/news.xml';
     const MAX_ITEMS = 12;
+
+    // Fallback chain — tries each proxy in order until one works
+    const PROXIES = [
+      async (url) => {
+        const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`);
+        if (!res.ok) throw new Error('corsproxy failed');
+        return res.text();
+      },
+      async (url) => {
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+        if (!res.ok) throw new Error('allorigins failed');
+        const data = await res.json();
+        return data.contents;
+      },
+      async (url) => {
+        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
+        if (!res.ok) throw new Error('codetabs failed');
+        return res.text();
+      },
+    ];
+
+    async function fetchWithFallback(url) {
+      for (const proxy of PROXIES) {
+        try {
+          const text = await proxy(url);
+          if (text && text.includes('<item>')) return text;
+        } catch (e) {
+          console.warn('Proxy failed, trying next...', e);
+        }
+      }
+      throw new Error('All proxies failed');
+    }
 
     function formatDate(dateStr) {
       if (!dateStr) return '';
@@ -458,11 +489,9 @@
       const countEl = document.getElementById('article-count');
 
       try {
-        const res = await fetch(`${CORS_PROXY}${encodeURIComponent(FEED_URL)}`);
-        if (!res.ok) throw new Error('Network error');
-        const data = await res.json();
+        const text = await fetchWithFallback(FEED_URL);
         const parser = new DOMParser();
-        const xml = parser.parseFromString(data.contents, 'text/xml');
+        const xml = parser.parseFromString(text, 'text/xml');
         const items = Array.from(xml.querySelectorAll('item')).slice(0, MAX_ITEMS);
 
         if (!items.length) throw new Error('No items found');
