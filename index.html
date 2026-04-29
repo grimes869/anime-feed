@@ -9,7 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=Fraunces:ital,opsz,wght@0,9..144,300;1,9..144,300&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #ffffff;
       --surface: #f7f7f5;
       --surface-hover: #f0f0ec;
       --border: #e8e8e4;
@@ -24,14 +23,15 @@
       --img-bg: #e8e8e4;
       --dot: #d0d0cc;
       --dot-active: #1a1a18;
-      --btn-bg: rgba(255,255,255,0.9);
+      --btn-bg: rgba(255,255,255,0.92);
       --btn-border: rgba(0,0,0,0.08);
       --btn-shadow: 0 2px 8px rgba(0,0,0,0.12);
+      --gap: 12px;
+      --pad: 14px;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #191919;
         --surface: #222220;
         --surface-hover: #2a2a28;
         --border: #2e2e2c;
@@ -51,47 +51,59 @@
       }
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html, body {
-      background: transparent !important;
+    html {
+      background: transparent;
+    }
+
+    body {
+      background: transparent;
       font-family: 'Outfit', sans-serif;
       color: var(--text-primary);
       font-size: 14px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
-      overflow: hidden;
+      /* Padding lives here so it's inside the scroll/clip boundary */
+      padding: var(--pad);
+      padding-bottom: calc(var(--pad) + 28px); /* extra for dots */
     }
 
-    /* ── Carousel wrapper ── */
+    /* ── Carousel ── */
     .carousel {
       position: relative;
       width: 100%;
-      padding: 10px 16px 36px;
     }
 
-    /* Overflow clip with peek on sides */
-    .carousel-track-wrap {
+    .carousel-viewport {
       overflow: hidden;
       width: 100%;
     }
 
+    /*
+      The track is 300% wide (3 pages × 100%).
+      Each page contains exactly 3 slides side by side.
+      We translate by 0%, -100%, -200% to change pages.
+      This means the CSS itself enforces 3-per-page regardless of container width.
+    */
     .carousel-track {
       display: flex;
+      width: 300%; /* totalPages × 100% — updated by JS */
       transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
       will-change: transform;
+    }
+
+    .carousel-page {
+      /* Each page is exactly 1/totalPages of the track = 100vw equivalent */
+      flex: 0 0 calc(100% / 3); /* updated by JS: 100% / totalPages */
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap);
       align-items: stretch;
+      padding-right: 0;
     }
 
-    /* ── Cards ── */
-    .carousel-slide {
-      flex: 0 0 var(--slide-width, calc(33.333% - 8px));
-      width: var(--slide-width, calc(33.333% - 8px));
-      margin-right: 12px;
-      min-width: 0;
-      max-width: none;
-    }
-
+    /* ── Card ── */
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -99,7 +111,6 @@
       overflow: hidden;
       box-shadow: var(--shadow);
       transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease;
-      cursor: pointer;
       text-decoration: none;
       color: inherit;
       display: flex;
@@ -129,9 +140,7 @@
       display: block;
     }
 
-    .card:hover .card-image-wrap img {
-      transform: scale(1.04);
-    }
+    .card:hover .card-image-wrap img { transform: scale(1.04); }
 
     .card-image-placeholder {
       width: 100%;
@@ -141,25 +150,17 @@
       justify-content: center;
     }
 
-    .card-image-placeholder svg {
-      opacity: 0.2;
-      width: 28px;
-      height: 28px;
-    }
+    .card-image-placeholder svg { opacity: 0.2; width: 28px; height: 28px; }
 
     .card-body {
-      padding: 14px 16px 16px;
+      padding: 13px 15px 15px;
       display: flex;
       flex-direction: column;
       gap: 7px;
       flex: 1;
     }
 
-    .card-meta {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
+    .card-meta { display: flex; align-items: center; gap: 6px; }
 
     .card-source {
       font-size: 10px;
@@ -172,10 +173,7 @@
       border-radius: 4px;
     }
 
-    .card-date {
-      font-size: 11px;
-      color: var(--text-meta);
-    }
+    .card-date { font-size: 11px; color: var(--text-meta); }
 
     .card-title {
       font-family: 'Fraunces', serif;
@@ -205,7 +203,6 @@
       margin-top: auto;
       padding-top: 8px;
       display: flex;
-      align-items: center;
       justify-content: flex-end;
     }
 
@@ -217,20 +214,19 @@
       align-items: center;
       gap: 3px;
       opacity: 0;
-      transition: opacity 0.2s ease;
+      transition: opacity 0.2s;
     }
 
     .card:hover .card-read-more { opacity: 1; }
-
     .card-read-more svg { width: 11px; height: 11px; }
 
     /* ── Nav buttons ── */
     .carousel-btn {
       position: absolute;
       top: 50%;
-      transform: translateY(calc(-50% - 18px));
-      width: 32px;
-      height: 32px;
+      transform: translateY(-50%);
+      width: 30px;
+      height: 30px;
       border-radius: 50%;
       background: var(--btn-bg);
       border: 1px solid var(--btn-border);
@@ -240,62 +236,53 @@
       align-items: center;
       justify-content: center;
       z-index: 10;
-      transition: opacity 0.2s, transform 0.2s;
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
+      transition: opacity 0.2s, transform 0.2s;
     }
 
-    .carousel-btn:hover { transform: translateY(calc(-50% - 18px)) scale(1.08); }
-    .carousel-btn:disabled { opacity: 0.25; cursor: default; }
-    .carousel-btn:disabled:hover { transform: translateY(calc(-50% - 18px)) scale(1); }
-
+    .carousel-btn:hover { transform: translateY(-50%) scale(1.1); }
+    .carousel-btn:disabled { opacity: 0.2; cursor: default; pointer-events: none; }
     .carousel-btn svg {
-      width: 14px;
-      height: 14px;
-      stroke: var(--text-primary);
-      fill: none;
-      stroke-width: 2;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+      width: 13px; height: 13px;
+      stroke: var(--text-primary); fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
     }
 
-    .carousel-btn-prev { left: -14px; }
-    .carousel-btn-next { right: -14px; }
+    .carousel-btn-prev { left: -6px; }
+    .carousel-btn-next { right: -6px; }
 
     /* ── Dots ── */
     .carousel-dots {
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
+      bottom: -24px;
+      left: 0; right: 0;
       display: flex;
       justify-content: center;
-      align-items: center;
       gap: 6px;
-      padding: 8px 0;
     }
 
     .dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
+      width: 6px; height: 6px;
+      border-radius: 3px;
       background: var(--dot);
-      cursor: pointer;
-      transition: background 0.25s, transform 0.25s, width 0.25s;
       border: none;
+      cursor: pointer;
+      transition: background 0.25s, width 0.25s;
       padding: 0;
     }
 
-    .dot.active {
-      background: var(--dot-active);
-      width: 18px;
-      border-radius: 3px;
-    }
+    .dot.active { background: var(--dot-active); width: 18px; }
 
     /* ── Skeleton ── */
-    .skeleton-slide {
-      flex: 0 0 calc(33.333% - 8px);
-      margin-right: 12px;
+    .skeleton-page {
+      flex: 0 0 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--gap);
+    }
+
+    .skeleton-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -303,41 +290,31 @@
     }
 
     .skeleton-img {
-      width: 100%;
-      aspect-ratio: 16/9;
+      width: 100%; aspect-ratio: 16/9;
       background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
     }
 
-    .skeleton-body {
-      padding: 14px 16px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
+    .skeleton-body { padding: 13px 15px; display: flex; flex-direction: column; gap: 8px; }
 
     .skeleton-line {
-      height: 11px;
-      border-radius: 4px;
+      height: 11px; border-radius: 4px;
       background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
     }
 
     @keyframes shimmer {
-      0% { background-position: 200% 0; }
+      0%   { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
 
     .error-state {
-      text-align: center;
-      padding: 48px 24px;
-      color: var(--text-meta);
-      font-size: 13px;
+      text-align: center; padding: 48px 0;
+      color: var(--text-meta); font-size: 13px;
     }
 
-    /* Card entrance animation */
     @keyframes cardIn {
       from { opacity: 0; transform: translateY(6px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -345,29 +322,33 @@
   </style>
 </head>
 <body>
-
   <div class="carousel" id="carousel">
-    <button class="carousel-btn carousel-btn-prev" id="btn-prev" aria-label="Previous">
+    <button class="carousel-btn carousel-btn-prev" id="btn-prev" disabled>
       <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
-    <div class="carousel-track-wrap">
+
+    <div class="carousel-viewport">
       <div class="carousel-track" id="carousel-track">
-        <!-- skeleton -->
-        <div class="skeleton-slide"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:85%"></div><div class="skeleton-line" style="width:65%"></div></div></div>
-        <div class="skeleton-slide"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:85%"></div><div class="skeleton-line" style="width:65%"></div></div></div>
-        <div class="skeleton-slide"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:85%"></div><div class="skeleton-line" style="width:65%"></div></div></div>
+        <!-- skeleton placeholder -->
+        <div class="skeleton-page">
+          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div></div>
+          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div></div>
+          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div></div>
+        </div>
       </div>
     </div>
-    <button class="carousel-btn carousel-btn-next" id="btn-next" aria-label="Next">
+
+    <button class="carousel-btn carousel-btn-next" id="btn-next" disabled>
       <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
     </button>
+
     <div class="carousel-dots" id="carousel-dots"></div>
   </div>
 
   <script>
     const FEED_URL  = 'https://myanimelist.net/rss/news.xml';
     const MAX_ITEMS = 12;
-    const PER_PAGE  = 3; // cards visible at once
+    const PER_PAGE  = 3;
 
     const PROXIES = [
       async (url) => {
@@ -393,9 +374,7 @@
         try {
           const text = await proxy(url);
           if (text && text.includes('<item>')) return text;
-        } catch (e) {
-          console.warn('Proxy failed, trying next...', e);
-        }
+        } catch(e) { console.warn('Proxy failed:', e); }
       }
       throw new Error('All proxies failed');
     }
@@ -403,21 +382,20 @@
     function formatDate(str) {
       if (!str) return '';
       const d = new Date(str);
-      if (isNaN(d)) return '';
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      return isNaN(d) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
     function extractImage(item) {
       const MRSS = 'http://search.yahoo.com/mrss/';
       const thumb = item.getElementsByTagNameNS(MRSS, 'thumbnail')[0];
       if (thumb) return thumb.getAttribute('url') || thumb.textContent.trim();
-      const content = item.getElementsByTagNameNS(MRSS, 'content')[0];
-      if (content?.getAttribute('url')) return content.getAttribute('url');
-      const enclosure = item.querySelector('enclosure');
-      if (enclosure?.getAttribute('url')) return enclosure.getAttribute('url');
-      const descText = item.querySelector('description')?.textContent || '';
+      const mc = item.getElementsByTagNameNS(MRSS, 'content')[0];
+      if (mc?.getAttribute('url')) return mc.getAttribute('url');
+      const enc = item.querySelector('enclosure');
+      if (enc?.getAttribute('url')) return enc.getAttribute('url');
+      const dt = item.querySelector('description')?.textContent || '';
       const frag = document.createElement('div');
-      frag.innerHTML = descText;
+      frag.innerHTML = dt;
       const img = frag.querySelector('img');
       if (img?.getAttribute('src')) return img.getAttribute('src');
       return null;
@@ -429,45 +407,37 @@
       return d.textContent || d.innerText || '';
     }
 
-    function buildSlide(item, idx) {
-      const title   = item.querySelector('title')?.textContent?.trim() || 'Untitled';
-      const link    = item.querySelector('link')?.textContent?.trim() || '#';
-      const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
-      const descRaw = item.querySelector('description')?.textContent || '';
-      const desc    = stripHtml(descRaw).replace(/\s+/g, ' ').trim();
-      const imgUrl  = extractImage(item);
-      const date    = formatDate(pubDate);
+    function buildCard(item, idx) {
+      const title  = item.querySelector('title')?.textContent?.trim() || 'Untitled';
+      const link   = item.querySelector('link')?.textContent?.trim() || '#';
+      const date   = formatDate(item.querySelector('pubDate')?.textContent?.trim());
+      const desc   = stripHtml(item.querySelector('description')?.textContent || '').replace(/\s+/g, ' ').trim();
+      const imgUrl = extractImage(item);
 
       const imgHtml = imgUrl
         ? `<img src="${imgUrl}" alt="" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'card-image-placeholder\\'><svg viewBox=\\'0 0 24 24\\' fill=\\'none\\' stroke=\\'currentColor\\' stroke-width=\\'1.5\\'><rect x=\\'3\\' y=\\'3\\' width=\\'18\\' height=\\'18\\' rx=\\'2\\'></rect><circle cx=\\'8.5\\' cy=\\'8.5\\' r=\\'1.5\\'></circle><path d=\\'M21 15l-5-5L5 21\\'></path></svg></div>'" />`
         : `<div class="card-image-placeholder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="M21 15l-5-5L5 21"></path></svg></div>`;
 
-      return `
-        <div class="carousel-slide">
-          <a class="card" href="${link}" target="_blank" rel="noopener noreferrer"
-             style="animation: cardIn 0.4s ease ${idx * 0.06}s both">
-            <div class="card-image-wrap">${imgHtml}</div>
-            <div class="card-body">
-              <div class="card-meta">
-                <span class="card-source">MAL</span>
-                ${date ? `<span class="card-date">${date}</span>` : ''}
-              </div>
-              <div class="card-title">${title}</div>
-              ${desc ? `<div class="card-desc">${desc.slice(0, 180)}</div>` : ''}
-              <div class="card-footer">
-                <span class="card-read-more">
-                  Read more
-                  <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
-                    <path d="M2 6h8M6 2l4 4-4 4"/>
-                  </svg>
-                </span>
-              </div>
-            </div>
-          </a>
-        </div>`;
+      return `<a class="card" href="${link}" target="_blank" rel="noopener noreferrer"
+                 style="animation: cardIn 0.4s ease ${idx * 0.07}s both">
+        <div class="card-image-wrap">${imgHtml}</div>
+        <div class="card-body">
+          <div class="card-meta">
+            <span class="card-source">MAL</span>
+            ${date ? `<span class="card-date">${date}</span>` : ''}
+          </div>
+          <div class="card-title">${title}</div>
+          ${desc ? `<div class="card-desc">${desc.slice(0, 180)}</div>` : ''}
+          <div class="card-footer">
+            <span class="card-read-more">Read more
+              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 6h8M6 2l4 4-4 4"/></svg>
+            </span>
+          </div>
+        </div>
+      </a>`;
     }
 
-    // ── Carousel state ──
+    // ── State ──
     let currentPage = 0;
     let totalPages  = 0;
     let autoTimer   = null;
@@ -477,49 +447,29 @@
     const btnPrev  = document.getElementById('btn-prev');
     const btnNext  = document.getElementById('btn-next');
 
-    function getSlideWidth() {
-      // Always exactly 1/3 of the track wrapper, accounting for gaps between 3 cards
-      const wrapWidth = track.parentElement.offsetWidth;
-      const totalGap  = 12 * (PER_PAGE - 1); // 2 gaps between 3 cards
-      const sw = (wrapWidth - totalGap) / PER_PAGE;
-      // Write back as CSS variable so CSS flex-basis matches JS math
-      document.documentElement.style.setProperty('--slide-width', sw + 'px');
-      return sw;
-    }
-
     function goTo(page) {
       currentPage = Math.max(0, Math.min(page, totalPages - 1));
-      const slideWidth = getSlideWidth();
-      // Each page advances by PER_PAGE slides + their gaps
-      const offset = currentPage * (PER_PAGE * (slideWidth + 12));
-      track.style.transform = `translateX(-${offset}px)`;
+      // Each page is exactly (100 / totalPages)% of the track width
+      // So translating by page * (100/totalPages)% moves exactly one page
+      const pct = currentPage * (100 / totalPages);
+      track.style.transform = `translateX(-${pct}%)`;
 
-      // Update dots
-      dotsWrap.querySelectorAll('.dot').forEach((d, i) => {
-        d.classList.toggle('active', i === currentPage);
-      });
-
+      dotsWrap.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentPage));
       btnPrev.disabled = currentPage === 0;
       btnNext.disabled = currentPage === totalPages - 1;
     }
 
     function startAuto() {
       clearInterval(autoTimer);
-      autoTimer = setInterval(() => {
-        goTo(currentPage < totalPages - 1 ? currentPage + 1 : 0);
-      }, 5000);
+      autoTimer = setInterval(() => goTo(currentPage < totalPages - 1 ? currentPage + 1 : 0), 5000);
     }
 
-    function resetAuto() {
-      startAuto();
-    }
+    btnPrev.addEventListener('click', () => { goTo(currentPage - 1); startAuto(); });
+    btnNext.addEventListener('click', () => { goTo(currentPage + 1); startAuto(); });
 
-    btnPrev.addEventListener('click', () => { goTo(currentPage - 1); resetAuto(); });
-    btnNext.addEventListener('click', () => { goTo(currentPage + 1); resetAuto(); });
-
-    // Pause on hover
-    document.getElementById('carousel').addEventListener('mouseenter', () => clearInterval(autoTimer));
-    document.getElementById('carousel').addEventListener('mouseleave', startAuto);
+    const carousel = document.getElementById('carousel');
+    carousel.addEventListener('mouseenter', () => clearInterval(autoTimer));
+    carousel.addEventListener('mouseleave', startAuto);
 
     async function loadFeed() {
       try {
@@ -529,28 +479,38 @@
         const items = Array.from(xml.querySelectorAll('item')).slice(0, MAX_ITEMS);
         if (!items.length) throw new Error('No items');
 
-        totalPages = Math.ceil(items.length / PER_PAGE);
+        // Group items into pages of PER_PAGE
+        const pages = [];
+        for (let i = 0; i < items.length; i += PER_PAGE) {
+          pages.push(items.slice(i, i + PER_PAGE));
+        }
+        totalPages = pages.length;
 
-        // Build all slides
-        track.innerHTML = items.map((item, i) => buildSlide(item, i)).join('');
+        // Set track width to totalPages × 100%
+        track.style.width = `${totalPages * 100}%`;
 
-        // Build dots
-        dotsWrap.innerHTML = Array.from({ length: totalPages }, (_, i) =>
-          `<button class="dot${i === 0 ? ' active' : ''}" aria-label="Page ${i+1}"></button>`
+        // Build pages — each page is 1/totalPages of the track
+        track.innerHTML = pages.map((pageItems, pi) => `
+          <div class="carousel-page" style="flex: 0 0 calc(100% / ${totalPages}); grid-template-columns: repeat(${PER_PAGE}, 1fr);">
+            ${pageItems.map((item, ci) => buildCard(item, pi * PER_PAGE + ci)).join('')}
+          </div>`
         ).join('');
 
+        // Dots
+        dotsWrap.innerHTML = pages.map((_, i) =>
+          `<button class="dot${i === 0 ? ' active' : ''}" aria-label="Page ${i+1}"></button>`
+        ).join('');
         dotsWrap.querySelectorAll('.dot').forEach((dot, i) => {
-          dot.addEventListener('click', () => { goTo(i); resetAuto(); });
+          dot.addEventListener('click', () => { goTo(i); startAuto(); });
         });
 
         goTo(0);
         startAuto();
 
-      } catch (err) {
+      } catch(err) {
         console.error(err);
-        track.parentElement.parentElement.innerHTML = `
-          <div class="error-state">
-            Unable to load feed.<br/>
+        document.querySelector('.carousel-viewport').innerHTML = `
+          <div class="error-state">Unable to load feed.<br/>
             <a href="https://myanimelist.net/news" target="_blank" rel="noopener"
                style="color:var(--accent);text-decoration:none;">Visit MAL News →</a>
           </div>`;
@@ -558,12 +518,6 @@
     }
 
     loadFeed();
-
-    // Recalculate on resize so 3-up layout stays locked
-    const resizeObserver = new ResizeObserver(() => {
-      goTo(currentPage);
-    });
-    resizeObserver.observe(track.parentElement);
   </script>
 </body>
 </html>
