@@ -72,12 +72,19 @@
 
     body {
       padding: var(--pad);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
     }
 
     /* ── Carousel ── */
     .carousel {
       position: relative;
       width: 100%;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
     }
 
     .carousel-viewport {
@@ -85,11 +92,14 @@
       width: 100%;
       border-radius: var(--radius);
       position: relative;
+      flex: 1;
+      min-height: 0;
     }
 
     .carousel-track {
       display: flex;
       width: 300%; /* overridden by JS */
+      height: 100%;
       transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
       will-change: transform;
     }
@@ -98,6 +108,7 @@
       display: grid;
       gap: var(--gap);
       align-items: stretch;
+      height: 100%;
     }
 
     /* ── Card ── */
@@ -112,6 +123,7 @@
       color: inherit;
       display: flex;
       flex-direction: column;
+      height: 100%;
     }
 
     .card:hover {
@@ -122,11 +134,11 @@
 
     .card-image-wrap {
       width: 100%;
-      /* Fixed vw height — scales with embed width, maintains proportion */
-      height: 13vw;
+      /* Grow to fill available card height above the text body */
+      flex: 1 1 0;
+      min-height: 0;
       overflow: hidden;
       background: var(--img-bg);
-      flex-shrink: 0;
     }
 
     .card-image-wrap img {
@@ -295,7 +307,7 @@
     }
 
     .skeleton-img {
-      width: 100%; height: 13vw;
+      width: 100%; height: 12vw;
       background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
