@@ -372,33 +372,13 @@
     const MAX_ITEMS = 12;
     const PER_PAGE  = 4;
 
-    const PROXIES = [
-      async (url) => {
-        const res = await fetch(`https://corsproxy.io/?url=${encodeURIComponent(url)}`);
-        if (!res.ok) throw new Error('corsproxy failed');
-        return res.text();
-      },
-      async (url) => {
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-        if (!res.ok) throw new Error('allorigins failed');
-        const data = await res.json();
-        return data.contents;
-      },
-      async (url) => {
-        const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`);
-        if (!res.ok) throw new Error('codetabs failed');
-        return res.text();
-      },
-    ];
 
-    async function fetchWithFallback(url) {
-      for (const proxy of PROXIES) {
-        try {
-          const text = await proxy(url);
-          if (text && text.includes('<item>')) return text;
-        } catch(e) { console.warn('Proxy failed:', e); }
-      }
-      throw new Error('All proxies failed');
+    async function fetchWithFallback() {
+      const response = await fetch('/api/feed');
+      if (!response.ok) throw new Error('Feed fetch failed');
+      const text = await response.text();
+      if (!text.includes('<item>')) throw new Error('Invalid feed');
+      return text;
     }
 
     function formatDate(str) {
