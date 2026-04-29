@@ -21,8 +21,8 @@
       --shadow-hover: 0 2px 8px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.06);
       --radius: 12px;
       --img-bg: #e8e8e4;
-      --dot: #d0d0cc;
-      --dot-active: #1a1a18;
+      --dot: rgba(255,255,255,0.45);
+      --dot-active: rgba(255,255,255,0.95);
       --btn-bg: rgba(255,255,255,0.92);
       --btn-border: rgba(0,0,0,0.08);
       --btn-shadow: 0 2px 8px rgba(0,0,0,0.12);
@@ -43,8 +43,8 @@
         --shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
         --shadow-hover: 0 2px 8px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
         --img-bg: #2a2a28;
-        --dot: #3a3a38;
-        --dot-active: #f0f0ec;
+        --dot: rgba(255,255,255,0.3);
+        --dot-active: rgba(255,255,255,0.9);
         --btn-bg: rgba(34,34,32,0.92);
         --btn-border: rgba(255,255,255,0.08);
         --btn-shadow: 0 2px 8px rgba(0,0,0,0.4);
@@ -53,20 +53,18 @@
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    html {
-      background: #8c8c8c;
-    }
-
-    body {
+    html, body {
       background: #8c8c8c;
       font-family: 'Outfit', sans-serif;
       color: var(--text-primary);
       font-size: 14px;
       line-height: 1.5;
       -webkit-font-smoothing: antialiased;
-      /* Padding lives here so it's inside the scroll/clip boundary */
+      overflow: hidden;
+    }
+
+    body {
       padding: var(--pad);
-      padding-bottom: calc(var(--pad) + 28px); /* extra for dots */
     }
 
     /* ── Carousel ── */
@@ -78,29 +76,21 @@
     .carousel-viewport {
       overflow: hidden;
       width: 100%;
+      /* Clip the overlay controls to the card area */
+      border-radius: var(--radius);
     }
 
-    /*
-      The track is 300% wide (3 pages × 100%).
-      Each page contains exactly 3 slides side by side.
-      We translate by 0%, -100%, -200% to change pages.
-      This means the CSS itself enforces 3-per-page regardless of container width.
-    */
     .carousel-track {
       display: flex;
-      width: 300%; /* totalPages × 100% — updated by JS */
+      width: 300%; /* overridden by JS */
       transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
       will-change: transform;
     }
 
     .carousel-page {
-      /* Each page is exactly 1/totalPages of the track = 100vw equivalent */
-      flex: 0 0 calc(100% / 3); /* updated by JS: 100% / totalPages */
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
       gap: var(--gap);
       align-items: stretch;
-      padding-right: 0;
     }
 
     /* ── Card ── */
@@ -199,8 +189,6 @@
       font-weight: 300;
     }
 
-    .card-footer { display: none; }
-
     /* ── Nav buttons ── */
     .carousel-btn {
       position: absolute;
@@ -233,18 +221,33 @@
     .carousel-btn-prev { left: -6px; }
     .carousel-btn-next { right: -6px; }
 
-    /* ── Dots ── */
-    .carousel-dots {
+    /* ── Overlay controls bar (dots + pause) — sits over the bottom of cards ── */
+    .carousel-controls {
       position: absolute;
-      bottom: -24px;
-      left: 0; right: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 32px;
       display: flex;
+      align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 8px;
+      /* Fade from transparent to semi-dark at the bottom of the viewport */
+      background: linear-gradient(to top, rgba(0,0,0,0.35) 0%, transparent 100%);
+      border-radius: 0 0 var(--radius) var(--radius);
+      pointer-events: none; /* let clicks pass through to cards except for interactive children */
+      z-index: 5;
+    }
+
+    .carousel-dots {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      pointer-events: all;
     }
 
     .dot {
-      width: 6px; height: 6px;
+      width: 5px; height: 5px;
       border-radius: 3px;
       background: var(--dot);
       border: none;
@@ -253,14 +256,37 @@
       padding: 0;
     }
 
-    .dot.active { background: var(--dot-active); width: 18px; }
+    .dot.active { background: var(--dot-active); width: 16px; }
+
+    /* ── Pause/play button ── */
+    .btn-pause {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: all;
+      transition: background 0.2s;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .btn-pause:hover { background: rgba(255,255,255,0.35); }
+
+    .btn-pause svg {
+      width: 8px; height: 8px;
+      fill: rgba(255,255,255,0.9);
+      stroke: none;
+    }
 
     /* ── Skeleton ── */
     .skeleton-page {
-      flex: 0 0 100%;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
       gap: var(--gap);
+      width: 100%;
     }
 
     .skeleton-card {
@@ -277,10 +303,10 @@
       animation: shimmer 1.5s infinite;
     }
 
-    .skeleton-body { padding: 13px 15px; display: flex; flex-direction: column; gap: 8px; }
+    .skeleton-body { padding: 10px 14px; display: flex; flex-direction: column; gap: 6px; }
 
     .skeleton-line {
-      height: 11px; border-radius: 4px;
+      height: 10px; border-radius: 4px;
       background: linear-gradient(90deg, var(--surface) 25%, var(--surface-hover) 50%, var(--surface) 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
@@ -308,23 +334,32 @@
       <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
     </button>
 
-    <div class="carousel-viewport">
+    <div class="carousel-viewport" id="carousel-viewport">
       <div class="carousel-track" id="carousel-track">
-        <!-- skeleton placeholder -->
-        <div class="skeleton-page">
-          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div></div>
-          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div></div>
-          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div></div>
-          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div><div class="skeleton-line" style="width:60%"></div></div></div>
+        <!-- skeleton — columns set by JS after load, hardcode 4 here -->
+        <div class="skeleton-page" id="skeleton-page" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div></div></div>
+          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div></div></div>
+          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div></div></div>
+          <div class="skeleton-card"><div class="skeleton-img"></div><div class="skeleton-body"><div class="skeleton-line" style="width:40%"></div><div class="skeleton-line" style="width:80%"></div></div></div>
         </div>
+      </div>
+
+      <!-- overlay controls inside viewport so they clip to card area -->
+      <div class="carousel-controls">
+        <div class="carousel-dots" id="carousel-dots"></div>
+        <button class="btn-pause" id="btn-pause" aria-label="Pause">
+          <!-- pause icon by default -->
+          <svg id="pause-icon" viewBox="0 0 8 10"><rect x="0" y="0" width="3" height="10" rx="1"/><rect x="5" y="0" width="3" height="10" rx="1"/></svg>
+          <!-- play icon, hidden -->
+          <svg id="play-icon" viewBox="0 0 10 10" style="display:none"><polygon points="0,0 10,5 0,10"/></svg>
+        </button>
       </div>
     </div>
 
     <button class="carousel-btn carousel-btn-next" id="btn-next" disabled>
       <svg viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
     </button>
-
-    <div class="carousel-dots" id="carousel-dots"></div>
   </div>
 
   <script>
@@ -410,11 +445,6 @@
           </div>
           <div class="card-title">${title}</div>
           ${desc ? `<div class="card-desc">${desc.slice(0, 180)}</div>` : ''}
-          <div class="card-footer">
-            <span class="card-read-more">Read more
-              <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 6h8M6 2l4 4-4 4"/></svg>
-            </span>
-          </div>
         </div>
       </a>`;
     }
@@ -423,19 +453,20 @@
     let currentPage = 0;
     let totalPages  = 0;
     let autoTimer   = null;
+    let isPaused    = false;
 
     const track    = document.getElementById('carousel-track');
     const dotsWrap = document.getElementById('carousel-dots');
     const btnPrev  = document.getElementById('btn-prev');
     const btnNext  = document.getElementById('btn-next');
+    const btnPause = document.getElementById('btn-pause');
+    const pauseIcon = document.getElementById('pause-icon');
+    const playIcon  = document.getElementById('play-icon');
 
     function goTo(page) {
       currentPage = Math.max(0, Math.min(page, totalPages - 1));
-      // Each page is exactly (100 / totalPages)% of the track width
-      // So translating by page * (100/totalPages)% moves exactly one page
       const pct = currentPage * (100 / totalPages);
       track.style.transform = `translateX(-${pct}%)`;
-
       dotsWrap.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === currentPage));
       btnPrev.disabled = currentPage === 0;
       btnNext.disabled = currentPage === totalPages - 1;
@@ -443,15 +474,26 @@
 
     function startAuto() {
       clearInterval(autoTimer);
-      autoTimer = setInterval(() => goTo(currentPage < totalPages - 1 ? currentPage + 1 : 0), 5000);
+      if (!isPaused) {
+        autoTimer = setInterval(() => goTo(currentPage < totalPages - 1 ? currentPage + 1 : 0), 5000);
+      }
+    }
+
+    function togglePause() {
+      isPaused = !isPaused;
+      pauseIcon.style.display = isPaused ? 'none' : '';
+      playIcon.style.display  = isPaused ? '' : 'none';
+      isPaused ? clearInterval(autoTimer) : startAuto();
     }
 
     btnPrev.addEventListener('click', () => { goTo(currentPage - 1); startAuto(); });
     btnNext.addEventListener('click', () => { goTo(currentPage + 1); startAuto(); });
+    btnPause.addEventListener('click', (e) => { e.stopPropagation(); togglePause(); });
 
+    // Pause on hover, resume on leave (only if not manually paused)
     const carousel = document.getElementById('carousel');
-    carousel.addEventListener('mouseenter', () => clearInterval(autoTimer));
-    carousel.addEventListener('mouseleave', startAuto);
+    carousel.addEventListener('mouseenter', () => { if (!isPaused) clearInterval(autoTimer); });
+    carousel.addEventListener('mouseleave', () => { if (!isPaused) startAuto(); });
 
     async function loadFeed() {
       try {
@@ -461,24 +503,20 @@
         const items = Array.from(xml.querySelectorAll('item')).slice(0, MAX_ITEMS);
         if (!items.length) throw new Error('No items');
 
-        // Group items into pages of PER_PAGE
         const pages = [];
         for (let i = 0; i < items.length; i += PER_PAGE) {
           pages.push(items.slice(i, i + PER_PAGE));
         }
         totalPages = pages.length;
 
-        // Set track width to totalPages × 100%
         track.style.width = `${totalPages * 100}%`;
 
-        // Build pages — each page is 1/totalPages of the track
         track.innerHTML = pages.map((pageItems, pi) => `
           <div class="carousel-page" style="flex: 0 0 calc(100% / ${totalPages}); grid-template-columns: repeat(${PER_PAGE}, 1fr);">
             ${pageItems.map((item, ci) => buildCard(item, pi * PER_PAGE + ci)).join('')}
           </div>`
         ).join('');
 
-        // Dots
         dotsWrap.innerHTML = pages.map((_, i) =>
           `<button class="dot${i === 0 ? ' active' : ''}" aria-label="Page ${i+1}"></button>`
         ).join('');
@@ -491,7 +529,7 @@
 
       } catch(err) {
         console.error(err);
-        document.querySelector('.carousel-viewport').innerHTML = `
+        document.getElementById('carousel-viewport').innerHTML = `
           <div class="error-state">Unable to load feed.<br/>
             <a href="https://myanimelist.net/news" target="_blank" rel="noopener"
                style="color:var(--accent);text-decoration:none;">Visit MAL News →</a>
